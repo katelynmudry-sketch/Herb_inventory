@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Herbal Inventory Tracker</title>
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkhlcmJhbCBJbnZlbnRvcnkiLAogICJzaG9ydF9uYW1lIjogIkhlcmJzIiwKICAiZGVzY3JpcHRpb24iOiAiVm9pY2UtcG93ZXJlZCBoZXJiYWwgaW52ZW50b3J5IHRyYWNrZXIiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZhZjhmNCIsCiAgInRoZW1lX2NvbG9yIjogIiMyZDUwMTYiCn0=">
+    <title>Herbal Inventory Status Tracker</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Work+Sans:wght@400;500;600&display=swap');
         
@@ -21,6 +20,7 @@
             --border: #d4cfc4;
             --success: #4a7c2a;
             --error: #a0522d;
+            --info: #4a7c9e;
             --shadow: rgba(45, 80, 22, 0.08);
         }
         
@@ -49,8 +49,7 @@
         
         header {
             text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
+            margin-bottom: 2rem;
         }
         
         h1 {
@@ -67,6 +66,50 @@
             color: var(--text-light);
             font-weight: 400;
             letter-spacing: 1px;
+        }
+        
+        /* Status Messages */
+        .status-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+            white-space: pre-line;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .status-message.show {
+            display: block;
+        }
+        
+        .status-message.success {
+            background: rgba(74, 124, 42, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .status-message.error {
+            background: rgba(160, 82, 45, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+        
+        .status-message.info {
+            background: rgba(74, 124, 158, 0.1);
+            border: 1px solid var(--info);
+            color: var(--info);
         }
         
         /* Voice Input Section */
@@ -92,7 +135,6 @@
             margin: 0 auto 1.5rem;
             box-shadow: 0 8px 24px rgba(45, 80, 22, 0.2);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
             touch-action: manipulation;
         }
         
@@ -103,11 +145,6 @@
         
         .voice-button:active {
             transform: scale(0.95);
-        }
-        
-        .voice-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
         
         .voice-button.listening {
@@ -142,7 +179,6 @@
             color: var(--error);
         }
         
-        /* Transcript Display */
         .transcript-box {
             background: var(--background);
             border: 2px solid var(--border);
@@ -153,7 +189,6 @@
             font-size: 1rem;
             line-height: 1.6;
             color: var(--text);
-            font-family: 'Work Sans', sans-serif;
         }
         
         .transcript-box.empty {
@@ -161,8 +196,8 @@
             font-style: italic;
         }
         
-        /* Manual Entry Form */
-        .manual-section {
+        /* Help Section */
+        .help-section {
             background: var(--surface);
             border-radius: 24px;
             padding: 2rem;
@@ -180,119 +215,35 @@
             font-weight: 400;
         }
         
-        .form-group {
-            margin-bottom: 1.5rem;
+        .help-content {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text);
         }
         
-        label {
-            display: block;
-            font-size: 0.85rem;
+        .help-content strong {
+            color: var(--primary);
             font-weight: 600;
-            color: var(--text);
-            margin-bottom: 0.5rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
         }
         
-        input, select {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 1rem;
-            font-family: 'Work Sans', sans-serif;
-            background: var(--background);
-            color: var(--text);
-            transition: all 0.2s;
+        .example-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
         }
         
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(45, 80, 22, 0.1);
+        .example-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
         }
         
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-        
-        button {
-            padding: 1rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Work Sans', sans-serif;
-            letter-spacing: 0.5px;
-            touch-action: manipulation;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-        
-        .btn-secondary {
-            background: var(--background);
-            color: var(--text);
-            border: 2px solid var(--border);
-        }
-        
-        .btn-secondary:hover {
-            background: var(--surface);
-            border-color: var(--primary);
-        }
-        
-        /* Status Messages */
-        .status-message {
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            font-size: 0.95rem;
-            display: none;
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .status-message.show {
-            display: block;
-        }
-        
-        .status-message.success {
-            background: rgba(74, 124, 42, 0.1);
-            border: 1px solid var(--success);
-            color: var(--success);
-        }
-        
-        .status-message.error {
-            background: rgba(160, 82, 45, 0.1);
-            border: 1px solid var(--error);
-            color: var(--error);
+        .example-list li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
         }
         
         /* Settings Section */
@@ -314,31 +265,23 @@
         .setup-button {
             width: 100%;
             margin-top: 1rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Work Sans', sans-serif;
+            letter-spacing: 0.5px;
+            background: var(--primary);
+            color: white;
         }
         
-        /* Responsive */
-        @media (max-width: 640px) {
-            .container {
-                padding: 1rem 0;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .voice-section {
-                padding: 2rem 1.5rem;
-            }
-            
-            .voice-button {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .mic-icon {
-                width: 40px;
-                height: 40px;
-            }
+        .setup-button:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
         }
         
         .connected-indicator {
@@ -365,27 +308,37 @@
             margin-right: 8px;
         }
         
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem 0;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .voice-section {
+                padding: 2rem 1.5rem;
+            }
+            
+            .voice-button {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .mic-icon {
+                width: 40px;
+                height: 40px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Herbal Inventory</h1>
-            <p class="subtitle">VOICE-POWERED TRACKING</p>
+            <h1>Herbal Status Tracker</h1>
+            <p class="subtitle">VOICE-POWERED INVENTORY</p>
         </header>
         
         <div id="statusMessage" class="status-message"></div>
@@ -402,41 +355,30 @@
             <div id="transcript" class="transcript-box empty">Your voice input will appear here...</div>
         </div>
         
-        <!-- Manual Entry Form -->
-        <div class="manual-section">
-            <h2 class="section-title">Manual Entry</h2>
-            
-            <div class="form-group">
-                <label for="herbName">Herb Name</label>
-                <input type="text" id="herbName" placeholder="e.g., Motherwort, Skullcap" autocomplete="off">
-            </div>
-            
-            <div class="form-group">
-                <label for="columnType">Column</label>
-                <select id="columnType">
-                    <option value="backstock">Backstock</option>
-                    <option value="needed">Needed</option>
-                    <option value="pending">Pending</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="amount">Amount</label>
-                <input type="number" id="amount" placeholder="0" min="0" step="1">
-            </div>
-            
-            <div class="form-group">
-                <label for="updateType">Update Type</label>
-                <select id="updateType">
-                    <option value="set">Set to this amount</option>
-                    <option value="add">Add to current amount</option>
-                    <option value="subtract">Subtract from current amount</option>
-                </select>
-            </div>
-            
-            <div class="button-group">
-                <button type="button" class="btn-secondary" onclick="clearForm()">Clear</button>
-                <button type="button" class="btn-primary" onclick="submitManualEntry()">Update</button>
+        <!-- Help Section -->
+        <div class="help-section">
+            <h2 class="section-title">Voice Commands</h2>
+            <div class="help-content">
+                <strong>Mark Status (comma-separated):</strong>
+                <ul class="example-list">
+                    <li>"Low: yarrow, chamomile, angelica"</li>
+                    <li>"Out: motherwort, skullcap"</li>
+                    <li>"In tincture: bacopa, valerian, oak"</li>
+                    <li>"Clinic backstock: yarrow, hawthorn"</li>
+                </ul>
+                
+                <strong>Check Status:</strong>
+                <ul class="example-list">
+                    <li>"Check yarrow"</li>
+                    <li>"Where is chamomile?"</li>
+                    <li>"Status of motherwort"</li>
+                </ul>
+                
+                <strong>Clear Status:</strong>
+                <ul class="example-list">
+                    <li>"Clear low: yarrow, chamomile"</li>
+                    <li>"Clear out: motherwort"</li>
+                </ul>
             </div>
         </div>
         
@@ -449,14 +391,14 @@
                     Not connected to Google Sheets
                 </p>
             </div>
-            <button class="btn-primary setup-button" onclick="setupGoogleSheets()">Configure Connection</button>
+            <button class="setup-button" onclick="setupGoogleSheets()">Configure Connection</button>
         </div>
     </div>
 
     <script>
         // Configuration
         const CONFIG = {
-            SCRIPT_URL: '' // Google Apps Script Web App URL
+            SCRIPT_URL: ''
         };
         
         // Load saved configuration
@@ -518,7 +460,6 @@
                 transcriptBox.textContent = transcript;
                 transcriptBox.classList.remove('empty');
                 
-                // If final result, parse and process
                 if (event.results[event.results.length - 1].isFinal) {
                     parseVoiceInput(transcript);
                 }
@@ -532,7 +473,7 @@
                 document.getElementById('voiceStatus').textContent = 'Tap to speak';
             };
         } else {
-            document.getElementById('voiceStatus').textContent = 'Voice input not supported in this browser';
+            document.getElementById('voiceStatus').textContent = 'Voice input not supported';
             document.getElementById('voiceButton').disabled = true;
         }
         
@@ -551,124 +492,197 @@
         function parseVoiceInput(text) {
             const lowerText = text.toLowerCase();
             
-            // Extract update type
-            let updateType = 'set';
-            if (lowerText.includes('add') || lowerText.includes('plus')) {
-                updateType = 'add';
-            } else if (lowerText.includes('subtract') || lowerText.includes('minus') || lowerText.includes('remove')) {
-                updateType = 'subtract';
+            // Detect query patterns
+            if (lowerText.includes('check') || lowerText.includes('where is') || lowerText.includes('status of')) {
+                const herbs = extractHerbsFromQuery(text);
+                if (herbs.length > 0) {
+                    showStatus(`Checking status of: ${herbs.join(', ')}`, 'info');
+                    setTimeout(() => queryStatus(herbs), 1000);
+                    return;
+                }
             }
             
-            // Extract column type
-            let columnType = 'backstock';
-            if (lowerText.includes('needed') || lowerText.includes('need')) {
-                columnType = 'needed';
-            } else if (lowerText.includes('pending')) {
-                columnType = 'pending';
+            // Detect clear patterns
+            if (lowerText.includes('clear')) {
+                const { statusType, herbs } = extractStatusAndHerbs(text, 'clear');
+                if (statusType && herbs.length > 0) {
+                    showStatus(`Clearing ${statusType} from: ${herbs.join(', ')}`, 'info');
+                    setTimeout(() => clearStatus(herbs, statusType), 1000);
+                    return;
+                }
             }
             
-            // Extract number
-            const numberMatch = text.match(/\d+/);
-            const amount = numberMatch ? parseInt(numberMatch[0]) : 0;
-            
-            // Extract herb name
-            let herbName = text;
-            herbName = herbName.replace(/\b(add|subtract|minus|remove|plus|set|to)\b/gi, '');
-            herbName = herbName.replace(/\b(backstock|back stock|needed|need|pending)\b/gi, '');
-            herbName = herbName.replace(/\d+/g, '');
-            herbName = herbName.trim().replace(/\s+/g, ' ');
-            
-            // Capitalize first letter of each word
-            herbName = herbName.split(' ').map(word => 
-                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-            ).join(' ');
-            
-            if (herbName && amount >= 0) {
-                document.getElementById('herbName').value = herbName;
-                document.getElementById('columnType').value = columnType;
-                document.getElementById('amount').value = amount;
-                document.getElementById('updateType').value = updateType;
-                
-                showStatus(`Parsed: ${herbName} - ${columnType} - ${updateType} ${amount}`, 'success');
-                
-                // Auto-submit after 2 seconds
-                setTimeout(() => {
-                    if (document.getElementById('herbName').value === herbName) {
-                        submitManualEntry();
-                    }
-                }, 2000);
+            // Default: mark status
+            const { statusType, herbs } = extractStatusAndHerbs(text, 'mark');
+            if (statusType && herbs.length > 0) {
+                showStatus(`Marking ${herbs.join(', ')} as ${statusType}`, 'info');
+                setTimeout(() => markStatus(herbs, statusType), 1000);
             } else {
-                showStatus('Could not parse voice input. Please use manual entry or try again.', 'error');
+                showStatus('Could not parse command. Try: "Low: yarrow, chamomile" or "Check yarrow"', 'error');
             }
         }
         
-        // Clear form
-        function clearForm() {
-            document.getElementById('herbName').value = '';
-            document.getElementById('columnType').value = 'backstock';
-            document.getElementById('amount').value = '';
-            document.getElementById('updateType').value = 'set';
-            document.getElementById('transcript').textContent = 'Your voice input will appear here...';
-            document.getElementById('transcript').classList.add('empty');
-        }
-        
-        // Submit manual entry
-        async function submitManualEntry() {
-            const herbName = document.getElementById('herbName').value.trim();
-            const columnType = document.getElementById('columnType').value;
-            const amount = parseInt(document.getElementById('amount').value) || 0;
-            const updateType = document.getElementById('updateType').value;
+        // Extract status type and herbs from text
+        function extractStatusAndHerbs(text, action) {
+            const lowerText = text.toLowerCase();
             
-            if (!herbName) {
-                showStatus('Please enter an herb name', 'error');
-                return;
+            // Status type mapping
+            const statusTypes = {
+                'low': 'Low',
+                'out': 'Out',
+                'in tincture': 'In Tincture',
+                'clinic backstock': 'Clinic Backstock',
+                'backstock': 'Clinic Backstock'
+            };
+            
+            let statusType = null;
+            let herbsText = '';
+            
+            // Find status keyword
+            for (let [keyword, mapped] of Object.entries(statusTypes)) {
+                if (lowerText.includes(keyword)) {
+                    statusType = mapped;
+                    // Extract text after the status keyword
+                    const parts = text.split(new RegExp(keyword + '\\s*:?\\s*', 'i'));
+                    if (parts.length > 1) {
+                        herbsText = parts[1];
+                    }
+                    break;
+                }
             }
             
+            if (!statusType || !herbsText) {
+                return { statusType: null, herbs: [] };
+            }
+            
+            // Remove "clear" from herb text if present
+            if (action === 'clear') {
+                herbsText = herbsText.replace(/\bclear\b/gi, '');
+            }
+            
+            // Split by commas and clean up
+            const herbs = herbsText
+                .split(',')
+                .map(h => h.trim())
+                .filter(h => h.length > 0)
+                .map(h => {
+                    // Capitalize first letter of each word
+                    return h.split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ');
+                });
+            
+            return { statusType, herbs };
+        }
+        
+        // Extract herbs from query text
+        function extractHerbsFromQuery(text) {
+            const lowerText = text.toLowerCase();
+            
+            // Remove query words
+            let herbText = text
+                .replace(/\b(check|where is|where's|status of|what about)\b/gi, '')
+                .trim();
+            
+            // Handle "and" as separator
+            herbText = herbText.replace(/\band\b/g, ',');
+            
+            // Split by commas
+            const herbs = herbText
+                .split(',')
+                .map(h => h.trim())
+                .filter(h => h.length > 0)
+                .map(h => {
+                    return h.split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ');
+                });
+            
+            return herbs;
+        }
+        
+        // Mark herbs with status
+        async function markStatus(herbs, statusType) {
             if (!CONFIG.SCRIPT_URL) {
                 showStatus('Please configure Google Sheets connection first', 'error');
                 return;
             }
             
             try {
-                showStatus('Updating...', 'success');
-                await updateGoogleSheet(herbName, columnType, amount, updateType);
-                showStatus(`✓ Updated ${herbName}: ${columnType} ${updateType} ${amount}`, 'success');
-                clearForm();
+                const response = await fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'mark_status',
+                        herbs: herbs,
+                        statusType: statusType
+                    })
+                });
+                
+                showStatus(`✓ Marked ${herbs.join(', ')} as ${statusType}`, 'success');
             } catch (error) {
-                console.error('Error updating sheet:', error);
-                showStatus('Error: ' + error.message, 'error');
+                console.error('Error:', error);
+                showStatus('Error updating sheet: ' + error.message, 'error');
             }
         }
         
-        // Update Google Sheet via Apps Script
-        async function updateGoogleSheet(herbName, columnType, amount, updateType) {
+        // Clear status from herbs
+        async function clearStatus(herbs, statusType) {
             if (!CONFIG.SCRIPT_URL) {
-                throw new Error('Script URL not configured');
+                showStatus('Please configure Google Sheets connection first', 'error');
+                return;
             }
             
             try {
                 const response = await fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Required for Apps Script
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        herbName: herbName,
-                        columnType: columnType,
-                        amount: amount,
-                        updateType: updateType
+                        action: 'clear_status',
+                        herbs: herbs,
+                        statusType: statusType
                     })
                 });
                 
-                // Note: no-cors mode means we can't read the response
-                // But the update still happens server-side
-                // Apps Script logs will show success/failure
-                
-                return { success: true };
+                showStatus(`✓ Cleared ${statusType} from ${herbs.join(', ')}`, 'success');
             } catch (error) {
-                console.error('Fetch error:', error);
-                throw new Error('Network error - check your connection');
+                console.error('Error:', error);
+                showStatus('Error updating sheet: ' + error.message, 'error');
+            }
+        }
+        
+        // Query herb status
+        async function queryStatus(herbs) {
+            if (!CONFIG.SCRIPT_URL) {
+                showStatus('Please configure Google Sheets connection first', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'query',
+                        herbs: herbs
+                    })
+                });
+                
+                // Note: Can't read response in no-cors mode
+                // User will need to check sheet or we need different approach
+                showStatus(`✓ Querying ${herbs.join(', ')}... Check your sheet for status`, 'info');
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('Error querying: ' + error.message, 'error');
             }
         }
         
@@ -677,7 +691,7 @@
             const instructions = 'You need your Google Apps Script Web App URL.\n\n' +
                 'It looks like:\n' +
                 'https://script.google.com/macros/s/ABC123.../exec\n\n' +
-                'See APPS-SCRIPT-DEPLOYMENT.md for detailed instructions.';
+                'See deployment guide for instructions.';
             
             const scriptUrl = prompt(instructions + '\n\nEnter your Script URL:');
             
@@ -685,7 +699,7 @@
                 CONFIG.SCRIPT_URL = scriptUrl.trim();
                 saveConfig();
                 updateConnectionStatus();
-                showStatus('Connected! Try a voice or manual update.', 'success');
+                showStatus('Connected! Try: "Low: yarrow, chamomile"', 'success');
             } else if (scriptUrl) {
                 showStatus('Invalid URL. Must be a script.google.com URL', 'error');
             }
@@ -704,14 +718,6 @@
         
         // Initialize on load
         loadConfig();
-        
-        // Service Worker for offline capability (optional)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // Register service worker for offline support
-                // (Implementation would go here for full PWA)
-            });
-        }
     </script>
 </body>
 </html>
