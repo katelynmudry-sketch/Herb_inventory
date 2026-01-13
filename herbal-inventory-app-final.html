@@ -355,6 +355,23 @@
             <div id="transcript" class="transcript-box empty">Your voice input will appear here...</div>
         </div>
         
+        <!-- Text Input Section (for testing) -->
+        <div class="voice-section">
+            <h2 class="section-title">Type Command (for testing)</h2>
+            <input 
+                type="text" 
+                id="textCommand" 
+                placeholder='Try: "Low: bacopa, valerian, oak"'
+                style="width: 100%; padding: 1rem; border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; margin-bottom: 1rem; font-family: 'Work Sans', sans-serif;"
+            >
+            <button 
+                onclick="submitTextCommand()" 
+                style="width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: 'Work Sans', sans-serif; letter-spacing: 0.5px;"
+            >
+                Submit Command
+            </button>
+        </div>
+        
         <!-- Help Section -->
         <div class="help-section">
             <h2 class="section-title">Voice Commands</h2>
@@ -715,6 +732,40 @@
                 statusEl.classList.remove('show');
             }, 5000);
         }
+        
+        // Text command submission
+        function submitTextCommand() {
+            const textInput = document.getElementById('textCommand');
+            const command = textInput.value.trim();
+            
+            if (!command) {
+                showStatus('Please enter a command', 'error');
+                return;
+            }
+            
+            // Show what we're parsing
+            const transcriptBox = document.getElementById('transcript');
+            transcriptBox.textContent = command;
+            transcriptBox.classList.remove('empty');
+            
+            // Use the same parsing as voice
+            parseVoiceInput(command);
+            
+            // Clear input
+            textInput.value = '';
+        }
+        
+        // Allow Enter key to submit
+        document.addEventListener('DOMContentLoaded', function() {
+            const textInput = document.getElementById('textCommand');
+            if (textInput) {
+                textInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        submitTextCommand();
+                    }
+                });
+            }
+        });
         
         // Initialize on load
         loadConfig();
