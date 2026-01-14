@@ -477,8 +477,10 @@
                 transcriptBox.textContent = transcript;
                 transcriptBox.classList.remove('empty');
                 
-                if (event.results[event.results.length - 1].isFinal) {
-                    parseVoiceInput(transcript);
+                 if (event.results[event.results.length - 1].isFinal) {
+        // Stop recognition immediately after final result
+        recognition.stop();
+        parseVoiceInput(transcript);
                 }
             };
             
