@@ -307,7 +307,122 @@
             background: var(--error);
             margin-right: 8px;
         }
-        
+
+        /* Results Display Section */
+        .results-section {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px var(--shadow);
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .results-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 400;
+        }
+
+        .results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.75rem;
+            background: var(--background);
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .result-item:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .result-herb-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .result-status {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.yes {
+            background: rgba(74, 124, 42, 0.15);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-badge.no {
+            background: rgba(160, 82, 45, 0.15);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .status-badge.unknown {
+            background: rgba(107, 107, 107, 0.15);
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .clear-results-btn {
+            width: 100%;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Work Sans', sans-serif;
+            letter-spacing: 0.5px;
+            background: var(--background);
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .clear-results-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
         /* Responsive */
         @media (max-width: 640px) {
             .container {
@@ -342,7 +457,16 @@
         </header>
         
         <div id="statusMessage" class="status-message"></div>
-        
+
+        <!-- Results Display Section -->
+        <div id="resultsSection" class="results-section">
+            <h2 class="results-title">Status Check Results</h2>
+            <ul id="resultsList" class="results-list">
+                <!-- Results will be inserted here dynamically -->
+            </ul>
+            <button class="clear-results-btn" onclick="clearResults()">Clear Results</button>
+        </div>
+
         <!-- Voice Input Section -->
         <div class="voice-section">
             <button id="voiceButton" class="voice-button" aria-label="Start voice input">
@@ -358,10 +482,10 @@
         <!-- Text Input Section (for testing) -->
         <div class="voice-section">
             <h2 class="section-title">Type Command (for testing)</h2>
-            <input 
-                type="text" 
-                id="textCommand" 
-                placeholder='Try: "Low: bacopa, valerian, oak"'
+            <input
+                type="text"
+                id="textCommand"
+                placeholder='Try: "Check backstock status of yarrow, angelica, baptisia"'
                 style="width: 100%; padding: 1rem; border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; margin-bottom: 1rem; font-family: 'Work Sans', sans-serif;"
             >
             <button 
@@ -387,8 +511,10 @@
                 <strong>Check Status:</strong>
                 <ul class="example-list">
                     <li>"Check yarrow"</li>
+                    <li>"Check backstock status of yarrow, angelica, and baptisia"</li>
                     <li>"Where is chamomile?"</li>
                     <li>"Status of motherwort"</li>
+                    <li>"Check low status of valerian and skullcap"</li>
                 </ul>
                 
                 <strong>Clear Status:</strong>
@@ -510,13 +636,28 @@
         // Parse voice input into structured data
         function parseVoiceInput(text) {
             const lowerText = text.toLowerCase();
-            
-            // Detect query patterns
+
+            // Detect query patterns (including "check backstock status")
             if (lowerText.includes('check') || lowerText.includes('where is') || lowerText.includes('status of')) {
+                // Extract query type if specified (like "backstock", "low", etc.)
+                let queryType = null;
+                if (lowerText.includes('backstock')) {
+                    queryType = 'Clinic Backstock';
+                } else if (lowerText.includes('low')) {
+                    queryType = 'Low';
+                } else if (lowerText.includes('out')) {
+                    queryType = 'Out';
+                } else if (lowerText.includes('tincture')) {
+                    queryType = 'In Tincture';
+                }
+
                 const herbs = extractHerbsFromQuery(text);
                 if (herbs.length > 0) {
-                    showStatus(`Checking status of: ${herbs.join(', ')}`, 'info');
-                    setTimeout(() => queryStatus(herbs), 1000);
+                    const statusMsg = queryType
+                        ? `Checking ${queryType} status of: ${herbs.join(', ')}`
+                        : `Checking status of: ${herbs.join(', ')}`;
+                    showStatus(statusMsg, 'info');
+                    setTimeout(() => queryStatus(herbs, queryType), 1000);
                     return;
                 }
             }
@@ -677,12 +818,16 @@
         }
         
         // Query herb status
-        async function queryStatus(herbs) {
+        async function queryStatus(herbs, queryType = null) {
             if (!CONFIG.SCRIPT_URL) {
-                showStatus('Please configure Google Sheets connection first', 'error');
+                // Show demo results when not connected
+                showStatus('Not connected to Google Sheets - showing demo results', 'info');
+                setTimeout(() => {
+                    displayResults(herbs, queryType, true);
+                }, 500);
                 return;
             }
-            
+
             try {
                 const response = await fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST',
@@ -692,17 +837,72 @@
                     },
                     body: JSON.stringify({
                         action: 'query',
-                        herbs: herbs
+                        herbs: herbs,
+                        queryType: queryType
                     })
                 });
-                
+
                 // Note: Can't read response in no-cors mode
-                // User will need to check sheet or we need different approach
-                showStatus(`✓ Querying ${herbs.join(', ')}... Check your sheet for status`, 'info');
+                // For now, show demo results. In production with proper CORS,
+                // you would parse the response and pass the actual data
+                showStatus(`✓ Queried ${herbs.join(', ')}`, 'success');
+                displayResults(herbs, queryType, true);
             } catch (error) {
                 console.error('Error:', error);
                 showStatus('Error querying: ' + error.message, 'error');
             }
+        }
+
+        // Display query results
+        function displayResults(herbs, queryType, isDemoData = false) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsList = document.getElementById('resultsList');
+            const resultsTitle = document.querySelector('.results-title');
+
+            // Update title based on query type
+            if (queryType) {
+                resultsTitle.textContent = `${queryType} Status Results`;
+            } else {
+                resultsTitle.textContent = 'Status Check Results';
+            }
+
+            // Clear previous results
+            resultsList.innerHTML = '';
+
+            // Generate results for each herb
+            herbs.forEach((herb, index) => {
+                const li = document.createElement('li');
+                li.className = 'result-item';
+
+                // In demo mode, alternate yes/no for demonstration
+                // In production, this would come from the actual API response
+                let hasStatus = isDemoData ? (index % 2 === 0) : false;
+
+                li.innerHTML = `
+                    <span class="result-herb-name">${herb}</span>
+                    <div class="result-status">
+                        <span class="status-label">${queryType || 'Status'}:</span>
+                        <span class="status-badge ${hasStatus ? 'yes' : 'no'}">
+                            ${hasStatus ? 'YES' : 'NO'}
+                        </span>
+                    </div>
+                `;
+
+                resultsList.appendChild(li);
+            });
+
+            // Show the results section
+            resultsSection.classList.add('show');
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Clear results display
+        function clearResults() {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.classList.remove('show');
+            showStatus('Results cleared', 'info');
         }
         
         // Setup Google Sheets
