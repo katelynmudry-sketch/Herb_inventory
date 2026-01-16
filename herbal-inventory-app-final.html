@@ -823,7 +823,7 @@
                 // Show demo results when not connected
                 showStatus('Not connected to Google Sheets - showing demo results', 'info');
                 setTimeout(() => {
-                    displayResults(herbs, queryType, true);
+                    displayResults(herbs, queryType, null, true);
                 }, 500);
                 return;
             }
@@ -831,7 +831,6 @@
             try {
                 const response = await fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -842,11 +841,15 @@
                     })
                 });
 
-                // Note: Can't read response in no-cors mode
-                // For now, show demo results. In production with proper CORS,
-                // you would parse the response and pass the actual data
-                showStatus(`✓ Queried ${herbs.join(', ')}`, 'success');
-                displayResults(herbs, queryType, true);
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus(`✓ ${result.message}`, 'success');
+                    // Pass the actual results from the API
+                    displayResults(herbs, queryType, result.data.results, false);
+                } else {
+                    showStatus(`Error: ${result.message}`, 'error');
+                }
             } catch (error) {
                 console.error('Error:', error);
                 showStatus('Error querying: ' + error.message, 'error');
@@ -854,7 +857,7 @@
         }
 
         // Display query results
-        function displayResults(herbs, queryType, isDemoData = false) {
+        function displayResults(herbs, queryType, apiResults = null, isDemoData = false) {
             const resultsSection = document.getElementById('resultsSection');
             const resultsList = document.getElementById('resultsList');
             const resultsTitle = document.querySelector('.results-title');
@@ -874,9 +877,15 @@
                 const li = document.createElement('li');
                 li.className = 'result-item';
 
-                // In demo mode, alternate yes/no for demonstration
-                // In production, this would come from the actual API response
-                let hasStatus = isDemoData ? (index % 2 === 0) : false;
+                let hasStatus = false;
+
+                // Use real API data if available
+                if (apiResults && apiResults[herb]) {
+                    hasStatus = apiResults[herb].hasStatus || false;
+                } else if (isDemoData) {
+                    // In demo mode, alternate yes/no for demonstration
+                    hasStatus = (index % 2 === 0);
+                }
 
                 li.innerHTML = `
                     <span class="result-herb-name">${herb}</span>
